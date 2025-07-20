@@ -38,10 +38,51 @@ wget https://raw.githubusercontent.com/jinqians/cloudflare_dns/refs/heads/main/d
 ## 📋 配置说明
 
 ### Cloudflare 配置
-- **API Token**: 需要DNS编辑权限
-- **域名**: 要管理的域名（如：example.com）
-- **记录名称**: DNS记录名称（如：www 或 @）
-- **记录类型**: 通常为A记录
+- **API Token**: 需要包含Zone:Zone:Read和Zone:DNS:Edit权限
+- **Zone ID**: 在Cloudflare控制台获取的域名区域ID
+- **Record ID**: 在DNS记录详情页获取的记录ID
+- **记录名称**: DNS记录名称（如：www.a.com 或 a.com）
+
+#### 快速获取Zone ID和Record ID
+**获取Zone ID:**
+```bash
+# 替换为您的域名和API Token
+curl -X GET "https://api.cloudflare.com/client/v4/zones?name=${example.com}" \
+  -H "Authorization: Bearer ${YOUR_API_TOKEN}" \
+  -H "Content-Type: application/json" | jq '.result[0].id'
+```
+
+**获取Record ID:**
+```bash
+# 替换为您的Zone ID、记录名称和API Token
+curl -X GET "https://api.cloudflare.com/client/v4/zones/${YOUR_ZONE_ID}/dns_records?name=${www.example.com}" \
+  -H "Authorization: Bearer ${YOUR_API_TOKEN}" \
+  -H "Content-Type: application/json" | jq '.result[0].id'
+```
+
+**一键获取脚本:**
+```bash
+#!/bin/bash
+# 保存为 get_cf_ids.sh
+DOMAIN="example.com"
+RECORD_NAME="www"
+API_TOKEN="YOUR_API_TOKEN"
+
+echo "获取 $DOMAIN 的Zone ID..."
+ZONE_ID=$(curl -s -X GET "https://api.cloudflare.com/client/v4/zones?name=$DOMAIN" \
+  -H "Authorization: Bearer $API_TOKEN" \
+  -H "Content-Type: application/json" | jq -r '.result[0].id')
+
+echo "Zone ID: $ZONE_ID"
+
+echo "获取 $RECORD_NAME.$DOMAIN 的Record ID..."
+RECORD_ID=$(curl -s -X GET "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records?name=$RECORD_NAME.$DOMAIN" \
+  -H "Authorization: Bearer $API_TOKEN" \
+  -H "Content-Type: application/json" | jq -r '.result[0].id')
+
+echo "Record ID: $RECORD_ID"
+```
+
 
 ### VPS 配置
 - **主VPS**: 优先使用的服务器IP和端口
@@ -182,7 +223,7 @@ DEBUG=1 ./dns_switch.sh
 
 ### 当前版本
 - **版本**: 2.0
-- **更新日期**: 2024-01-01
+- **更新日期**: 2025-07-20
 - **主要特性**: 小黄云支持、Telegram通知、配置化管理
 
 ### 更新日志
